@@ -1,6 +1,6 @@
 # keycloakinator
 
-![keycloakinator](https://github.com/deadlysyn/keycloakintor/raw/main/assets/terminator.png "Terminated!")
+![keycloakinator](https://raw.githubusercontent.com/deadlysyn/keycloakinator/main/assets/terminator.png "Terminated!")
 
 Generate or terminate keycloak clients with machine efficiency.
 
