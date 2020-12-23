@@ -1,0 +1,65 @@
+#!/bin/sh
+
+set -e
+
+ID=$(uuidgen | tr '[:upper:]' '[:lower:]' 2>/dev/null)
+
+usage() {
+    cat <<EOF
+USAGE: $(basename $0) -c <client_name> -t <client_type> [-r <aws_region>]
+
+  -c    name of client to create (e.g. FQDN)
+  -r    AWS region for remote state (default: us-east-2)
+  -t    client type (confidential, public, saml)
+EOF
+    exit 1
+}
+
+CLIENT=""; REGION="us-east-2"; TYPE=""
+while getopts c:r:t: ARG; do
+    case "${ARG}" in
+        c) CLIENT="$OPTARG" ;;
+        r) REGION="$OPTARG" ;;
+        t) TYPE="$OPTARG" ;;
+        *) usage ;;
+    esac
+done
+
+[ -z "${CLIENT}" ] || [ -z "${TYPE}" ] && usage
+
+[ -d "./sample-oidc-public.acme.corp" ] || {
+  echo "Not in clients directory?"
+  exit 1
+}
+
+[ -d "${CLIENT}" ] && {
+  echo "${CLIENT} exists, bailing."
+  exit 1
+}
+
+case "${TYPE}" in
+    [Cc][Oo][Nn][Ff][Ii][Dd][Ee][Nn][Tt][Ii][Aa][Ll])
+        TEMPLATE="sample-oidc-confidential.acme.corp" ;;
+    [Pp][Uu][Bb][Ll][Ii][Cc])
+        TEMPLATE="sample-oidc-public.acme.corp" ;;
+    [Ss][Aa][Mm][Ll])
+        TEMPLATE="sample-saml.acme.corp" ;;
+esac
+
+cp -R "${TEMPLATE}" "${CLIENT}"
+
+# BSD vs GNU sed
+SED_ARGS="-i"
+[ "$(uname)" = "Darwin" ] && SED_ARGS="-i ''"
+
+eval "sed ${SED_ARGS} \
+    -e s/%%ID%%/${ID}/g \
+    -e s/%%REGION%%/${REGION}/g \
+    ./${CLIENT}/backend.tfvars"
+
+eval "sed ${SED_ARGS} \
+    -e s/%%CLIENT%%/${CLIENT}/g \
+    -e s/%%ID%%/${ID}/g \
+    ./${CLIENT}/terraform.tfvars"
+
+eval "${EDITOR:-vi} ${CLIENT}/terraform.tfvars"

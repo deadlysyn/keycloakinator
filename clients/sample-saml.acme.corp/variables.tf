@@ -1,0 +1,1 @@
+../../modules/keycloak_saml_client/variables.tf

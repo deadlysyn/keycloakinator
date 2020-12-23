@@ -1,0 +1,1 @@
+../../modules/keycloak_openid_client/variables.tf
